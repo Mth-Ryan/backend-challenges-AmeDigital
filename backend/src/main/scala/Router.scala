@@ -1,54 +1,52 @@
 import cats.*
-import cats.implicits.*
 import cats.effect.*
+
 import io.circe.*
 import io.circe.syntax.*
 import io.circe.literal.*
 import io.circe.generic.auto.*
+
 import org.http4s.*
-import org.http4s.dsl.*
+import org.http4s.dsl.io.*
 import org.http4s.circe.*
 import org.http4s.implicits.*
 
+import planets.*
+
 object Router {
-  case class Planet(id: Int, name: String, climate: String, terrain: String)
-  
-  private def rootRoutes[F[_]: Monad]: HttpRoutes[F] = {
-    val dsl = Http4sDsl[F]
-    import dsl._
-  
-    HttpRoutes.of[F] {
+  private def rootRoutes: HttpRoutes[IO] = {
+    HttpRoutes.of[IO] {
       case GET -> Root => 
         Ok(json"""{"hello": "world!"}""")
     }
   }
   
-  private def planetsRoutes[F[_]: Monad]: HttpRoutes[F] = {
-    val dsl = Http4sDsl[F]
-    import dsl._
+  private def planetsRoutes: HttpRoutes[IO] = {
+    given EntityDecoder[IO, Dtos.PlanetInput] = jsonOf[IO, Dtos.PlanetInput]
   
-    HttpRoutes.of[F] {
-      case GET -> Root => 
-        Ok(json"""{"hello": "world!"}""")
-
+    HttpRoutes.of[IO] {
       case GET -> Root / "planets" =>
-        Ok(List(Planet(1, "Tatooine", "arid", "desert")).asJson)
+        Ok(List(Dtos.PlanetOutput(1, "Tatooine", List("arid"), List("desert"))).asJson)
     
       case GET -> Root / "planets" / IntVar(id) =>
-        Ok(Planet(id, "Tatooine", "arid", "desert").asJson)
+        Ok(Dtos.PlanetOutput(1, "Tatooine", List("arid"), List("desert")).asJson)
 
-      case POST -> Root / "planets" =>
-        Ok(Planet(1, "Tatooine", "arid", "desert").asJson)
+      case request @ POST -> Root / "planets" => for {
+        req <- request.as[Dtos.PlanetInput]
+        res <- Ok(Dtos.PlanetOutput(1, req.name, req.climate, req.terrain).asJson)
+      } yield res
 
-      case PUT -> Root / "planets" / IntVar(id) =>
-        Ok(Planet(1, "Tatooine", "arid", "desert").asJson)
+      case request @ PUT -> Root / "planets" / IntVar(id) => for {
+        req <- request.as[Dtos.PlanetInput]
+        res <- Ok(Dtos.PlanetOutput(id, req.name, req.climate, req.terrain).asJson)
+      } yield res
     
       case DELETE -> Root / "planets" / IntVar(id) =>
         Ok()
     }
   }
 
-  def app[F[_]: Monad]: HttpApp[F] = {
+  def app: HttpApp[IO] = {
     import cats.syntax.semigroupk.*
     (rootRoutes <+> planetsRoutes).orNotFound
   }
