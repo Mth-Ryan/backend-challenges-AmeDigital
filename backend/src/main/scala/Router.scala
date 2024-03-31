@@ -26,10 +26,12 @@ object Router {
   
     HttpRoutes.of[IO] {
       case GET -> Root / "planets" =>
-        Ok(List(Dtos.PlanetOutput(1, "Tatooine", List("arid"), List("desert"))).asJson)
+        PlanetsService.getAll().flatMap((x: List[Dtos.PlanetOutput]) => Ok(x.asJson))
     
-      case GET -> Root / "planets" / IntVar(id) =>
-        Ok(Dtos.PlanetOutput(1, "Tatooine", List("arid"), List("desert")).asJson)
+      case GET -> Root / "planets" / IntVar(id) => PlanetsService.get(id).flatMap {
+        case Some(planet) => Ok(planet.asJson)
+        case None         => NotFound(json"""{ "message": "Planet not found" }""")
+      }
 
       case request @ POST -> Root / "planets" => for {
         req <- request.as[Dtos.PlanetInput]
