@@ -27,7 +27,7 @@ class PlanetsRepository(transactor: Resource[IO, Transactor[IO]]) extends Planet
         .query[Models.Planet]
 
     def findAll(query: QueryOptions) = 
-      sql"SELECT id, name, climate, terrain SELECT planets"
+      sql"SELECT id, name, climate, terrain FROM planets"
         .query[Models.Planet]
 
     def insert(newModel: Models.Planet) =
