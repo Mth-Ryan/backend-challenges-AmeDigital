@@ -33,13 +33,13 @@ class PlanetsRepository(transactor: Resource[IO, Transactor[IO]]) extends Planet
     def insert(newModel: Models.Planet) =
       sql"""
         INSERT INTO planets (name, climate, terrain)
-        VALUES ($newModel.name, $newModel.climate, $newModel.terrain)
+        VALUES (${newModel.name}, ${newModel.climate}, ${newModel.terrain})
       """.update
 
     def update(id: Int, newModel: Models.Planet) =
       sql"""
         UPDATE planets 
-        SET name = $newModel.name, climate = $newModel.climate, terrain = $newModel.terrain
+        SET name = ${newModel.name}, climate = ${newModel.climate}, terrain = ${newModel.terrain}
         WHERE id = $id
       """.update
 

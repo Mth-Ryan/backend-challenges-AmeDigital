@@ -35,16 +35,19 @@ object Router {
 
       case request @ POST -> Root / "planets" => for {
         req <- request.as[Dtos.PlanetInput]
-        res <- Ok(Dtos.PlanetOutput(1, req.name, req.climate, req.terrain).asJson)
+        pay <- PlanetsService.create(req)
+        res <- Ok(pay.asJson)
       } yield res
 
       case request @ PUT -> Root / "planets" / IntVar(id) => for {
         req <- request.as[Dtos.PlanetInput]
-        res <- Ok(Dtos.PlanetOutput(id, req.name, req.climate, req.terrain).asJson)
+        pay <- PlanetsService.update(id, req)
+        res <- Ok(pay.asJson)
       } yield res
     
-      case DELETE -> Root / "planets" / IntVar(id) =>
-        Ok()
+      case DELETE -> Root / "planets" / IntVar(id) => PlanetsService.delete(id).flatMap { _ =>
+        Ok(json"""{ "id": $id }""")
+      }
     }
   }
 
