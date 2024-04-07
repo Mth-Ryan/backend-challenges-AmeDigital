@@ -35,6 +35,11 @@ object Router {
         case None         => NotFound(json"""{ "message": "Planet not found" }""")
       }
 
+      case GET -> Root / "planets" / name => PlanetsService.getByName(name).flatMap {
+        case Some(planet) => Ok(planet.asJson)
+        case None         => NotFound(json"""{ "message": "Planet not found" }""")
+      }
+
       case request @ POST -> Root / "planets" => for {
         req <- request.as[Dtos.PlanetInput]
         pay <- PlanetsService.create(req)

@@ -17,6 +17,10 @@ object PlanetsService extends Service {
     repository.findById(id)
       .map(_.map(Mapper.outputFromModel(_)))
 
+  def getByName(name: String): IO[Option[Dtos.PlanetOutput]] =
+    repository.findByName(name)
+      .map(_.map(Mapper.outputFromModel(_)))
+
   def getAll(): IO[List[Dtos.PlanetOutput]] =
     repository.findAll(QueryOptions(None, None))
       .map(_.map(Mapper.outputFromModel(_)))
