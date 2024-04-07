@@ -1,4 +1,5 @@
 import cats.*
+import cats.data.OptionT
 import cats.effect.*
 
 import io.circe.*
@@ -10,6 +11,7 @@ import org.http4s.*
 import org.http4s.dsl.io.*
 import org.http4s.circe.*
 import org.http4s.implicits.*
+import org.http4s.server.middleware.{ErrorAction, ErrorHandling}
 
 import planets.*
 
@@ -53,6 +55,10 @@ object Router {
 
   def app: HttpApp[IO] = {
     import cats.syntax.semigroupk.*
-    (rootRoutes <+> planetsRoutes).orNotFound
+    import Middlewares.*
+
+    (rootRoutes <+> planetsRoutes)
+      .withErrorLoggingMiddleware
+      .orNotFound
   }
 }
