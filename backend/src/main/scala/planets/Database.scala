@@ -4,14 +4,14 @@ import cats.effect.*
 
 import doobie.*
 import doobie.implicits.*
-
 import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor.*
 import doobie.hikari.*
 import doobie.util.ExecutionContexts
-import doobie.util.log.LogEvent
+import doobie.util.log.*
 
+import org.slf4j.LoggerFactory
 
 object Database {
   val database = "ame_challenge"
@@ -19,9 +19,17 @@ object Database {
   val password = "docker"
 
   val printSqlLogHandler: LogHandler[IO] = new LogHandler[IO] {
-  def run(logEvent: LogEvent): IO[Unit] = 
-    IO { 
-      println(logEvent)
+    val logger = LoggerFactory.getLogger(getClass)
+    
+    def run(logEvent: LogEvent): IO[Unit] = IO {
+      logEvent match {
+        case Success(sql, args, _, exec, _) =>
+          logger.info(s"Successfull Database query: $sql, args: $args, exec: $exec")
+        case ExecFailure(sql, args, _, exec, err) =>
+          logger.info(s"Failed to execute Database query: $sql, args: $args, exec: $exec, due: $err")
+        case ProcessingFailure(sql, args, _, exec, _, err) =>
+          logger.info(s"Failed to process Database query: $sql, args: $args, exec: $exec, due: $err")
+      }
     }
   }
   
