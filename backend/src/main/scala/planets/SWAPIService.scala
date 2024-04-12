@@ -51,8 +51,9 @@ object SWAPIService {
       _    <- IO { filmsCache += (strUri -> film) }
     } yield film
   
-  def getPlanetFilms(planetId: Int): IO[List[FilmResponse]] = for {
+  def getPlanetFilms(planetId: Int): IO[List[Dtos.FilmOutput]] = for {
     planet <- getPlanetMetadata(planetId)
     films  <- planet.films.parTraverse(getFilmMetadata(_))
-  } yield films
+    output <- IO.pure(films.map(x => Dtos.FilmOutput(x.episode_id, x.title, x.release_date)))
+  } yield output
 }
